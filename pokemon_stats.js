@@ -8,7 +8,7 @@
 
 
 
-[
+const pokemon_data = [
   {
     "id": 1,
     "name": "bulbasaur",
