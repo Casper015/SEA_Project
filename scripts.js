@@ -63,6 +63,13 @@ class display {
     this.preload_images(this.next_batch);
     console.log("----- Loaded next batch of pokemon -----");
   }
+
+  sort_by_stat(stat_name) {
+    const sorted = untils.sort_array(this.shuffled_pokemon, stat_name);
+    this.shuffled_pokemon = sorted;
+    this.current_index = 0;
+    console.log(`Pokemon sorted by ${stat_name}`);
+  }
 }
 
 class pokenmon_card {
@@ -106,16 +113,7 @@ class pokenmon_card {
     // Format abilities, height and weight, stats
     const abilities = untils.formatted_abilities(pokemon.abilities);
     const heightWeight = `Height: ${pokemon.height / 10}m | Weight: ${pokemon.weight / 10}kg`;
-    const totalStats =
-      pokemon.hp +
-      pokemon.attack +
-      pokemon.defense +
-      pokemon.sp_attack +
-      pokemon.sp_defense +
-      pokemon.speed;
-    const stats = `HP: ${pokemon.hp} | ATK: ${pokemon.attack} | DEF: ${pokemon.defense} 
-    | Sp. ATK: ${pokemon.sp_attack} | Sp. DEF: ${pokemon.sp_defense}| SPD: ${pokemon.speed}
-    Tot : ${totalStats}`;
+    const stats = untils.format_stats(pokemon);
 
     // Set text content for the card
     untils.set_text(card_clone, ".card-title", pokemon.name.toUpperCase());
@@ -131,14 +129,44 @@ class pokenmon_card {
 }
 
 const untils = {
-  // Format abilities 
+  
+  pokemon_stats: ["hp", "attack", "defense", "sp_attack", "sp_defense", "speed"],
+  pokemon_max_stats: [255, 181, 230, 173, 230, 200],
+
+  stat_labels: {
+    hp: "HP",
+    attack: "ATK",
+    defense: "DEF",
+    sp_attack: "Sp. ATK",
+    sp_defense: "Sp. DEF",
+    speed: "SPD"
+  },
+
+  // Format base stats and total score
+  format_stats(pokemon) {
+    const formatted_array = this.pokemon_stats.map((stat) => {
+      const label = this.stat_labels[stat];
+      const value = pokemon[stat];
+      const max_value = this.pokemon_max_stats[this.pokemon_stats.indexOf(stat)];
+      return `${label}: ${value}/${max_value}`;
+    });
+
+    const stats_string = formatted_array.join(" | ");
+    const total_score = this.pokemon_stats.reduce((sum, key) => {
+      const value = pokemon[key];
+      return sum + value;
+    }, 0);
+
+    return `${stats_string} | Tot: ${total_score}`;
+  },
+
+  // Format abilities
   formatted_abilities(abilities_string) {
-    
     if (!abilities_string) {
       return "None";
     }
 
-  return abilities_string
+    return abilities_string
       .split(",")
       .map((ability) => {
         const trimmed = ability.trim();
@@ -148,8 +176,8 @@ const untils = {
   },
 
   // Shuffle an array
-  shuffled_array (array){
-    return [...array].sort(() => Math.random() - 0.5)
+  shuffled_array(array) {
+    return [...array].sort(() => Math.random() - 0.5);
   },
 
   // Build artwork URL from pokemon id
@@ -163,8 +191,40 @@ const untils = {
     if (element) {
       element.textContent = value;
     }
-  }
+  },
 
+  sort_array(arr, key) {
+    if (arr.length <= 1) {
+      return arr;
+    }
+
+    // find mid element index
+    const mid = Math.floor(arr.length / 2);
+
+    // left and right halves
+    const left = this.sort_array(arr.slice(0, mid), key);
+    const right = this.sort_array(arr.slice(mid), key);
+
+    return this.merge_arrays(left, right, key);
+  },
+
+  merge_arrays(left, right, key) {
+    const merged = [];
+    let i = 0, j = 0;
+
+    while (i < left.length && j < right.length) {
+      // insert the smallest element into the merged array
+      if (left[i][key] < right[j][key]) {
+        merged.push(left[i]);
+        i++;
+      } else {
+        merged.push(right[j]);
+        j++;
+      }
+    }
+
+    return merged.concat(left.slice(i)).concat(right.slice(j));
+  }
 };
 
 document.addEventListener("DOMContentLoaded", () => {
