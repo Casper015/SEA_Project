@@ -1,59 +1,90 @@
 
-class pokenmon {
+class display {
 
-  constructor(data) {
+  constructor(data, card_manager) {
     this.database = data;
+    this.pokemon_manager = card_manager;
+
     this.current_batch = [];
     this.next_batch = [];
+
     this.display_count = 3;
   }
 
   // Shuffle random pokemon from the database
   draw_pokemon() {
-    const shuffle_pokemon = [...this.database].sort(
+    const shuffled_pokemon = [...this.database].sort(
       () => Math.random() - 0.5,
     );
-    return shuffle_pokemon.slice(0, this.display_count);
+    const selected = shuffled_pokemon.slice(0, this.display_count);
+    console.log("1. Drew pokemon:", selected);
+    return selected;
   }
 
   // Preload image for refreshing page faster
-  preload_next_pokemon(batch) {
+  preload_images(batch) {
     batch.forEach((pokemon) => {
       const img = new Image();
       img.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`;
     });
   }
 
-  // Format abilities 
-  formatted_abilities(abilities_string) {
-    if (!abilities_string) {
-      return "None";
-    }
-    return abilities_string
-      .split(",")
-      .map((ability) => ability.trim())
-      .map((ability) => {
-        return ability.charAt(0).toUpperCase() + ability.slice(1);
-      })
-      .join(", ");
+  // Initialize
+  init() {
+    this.current_batch = this.draw_pokemon();
+    this.next_batch = this.draw_pokemon();
+
+    this.preload_images(this.next_batch);
+    this.pokemon_manager.display_cards(this.current_batch);
+    console.log("3. Pokedex initialized with", this.current_batch.length, "pokemon");
   }
 
-  // Helper function to set text content
-  set_text = (card_clone, selector, value) => {
-    const element = card_clone.querySelector(selector);
-    if (element) {
-      element.textContent = value;
-    }
-  };
+  // Pre-loading
+  load_next_batch() {
+    console.log("1. Loading next batch...");
+    this.current_batch = this.next_batch;
+    this.pokemon_manager.display_cards(this.current_batch);
+
+    this.next_batch = this.draw_pokemon();
+    this.preload_images(this.next_batch);
+    console.log("3. Next batch loaded");
+  }
+}
+
+class pokenmon_card {
+
+  constructor(container_id, template_id) {
+    this.container = document.getElementById(container_id);
+    this.template = document.getElementById(template_id);
+  }
+
+  display_cards(batch) {
+    if (!this.template || !this.container) return;
+
+    this.container.innerHTML = "";
+    const temp_box = document.createDocumentFragment();
+
+    batch.forEach((pokemon) => {
+      const card_clone = this.create_single_card(pokemon, this.template);
+      temp_box.appendChild(card_clone);
+    });
+    this.container.appendChild(temp_box);
+    console.log("2. Cards displayed");
+  }
+
+  // Build artwork URL from pokemon id
+  getSpriteUrl(pokemon_id) {
+    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon_id}.png`;
+  }
 
   // Create a single card element
   create_single_card(pokemon, template) {
     const card_clone = template.content.cloneNode(true);
     
     // Set image source
-    const img_element = card_clone.querySelector(".card-img");
-    img_element.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`;
-    img_element.alt = pokemon.name;
+    const imgElement = card_clone.querySelector(".card-img");
+    imgElement.src = this.getSpriteUrl(pokemon.id);
+    imgElement.alt = pokemon.name;
 
     // Format types，some pokemon have two types, some only have one
     let types_string;
@@ -64,63 +95,69 @@ class pokenmon {
       }
     
     // Format abilities, height and weight, stats
-    const abilities_array = this.formatted_abilities(pokemon.abilities);
-    const h_weight = `Height: ${pokemon.height / 10}m | Weight: ${pokemon.weight / 10}kg`;
-    let stats = `HP: ${pokemon.hp} | ATK: ${pokemon.attack} | DEF: ${pokemon.defense} 
+    const abilities = untils.formatted_abilities(pokemon.abilities);
+    const heightWeight = `Height: ${pokemon.height / 10}m | Weight: ${pokemon.weight / 10}kg`;
+    const totalStats =
+      pokemon.hp +
+      pokemon.attack +
+      pokemon.defense +
+      pokemon.sp_attack +
+      pokemon.sp_defense +
+      pokemon.speed;
+    const stats = `HP: ${pokemon.hp} | ATK: ${pokemon.attack} | DEF: ${pokemon.defense} 
     | Sp. ATK: ${pokemon.sp_attack} | Sp. DEF: ${pokemon.sp_defense}| SPD: ${pokemon.speed}
-    Tot : ${pokemon.hp + pokemon.attack + pokemon.defense + pokemon.sp_attack + pokemon.sp_defense + pokemon.speed}`;
+    Tot : ${totalStats}`;
 
     // Set text content for the card
-    this.set_text(card_clone, ".card-title", pokemon.name.toUpperCase());
-    this.set_text(card_clone, ".card-type", `TYPE: ${types_string.toUpperCase()}`);
-    this.set_text(card_clone, ".card-id", `ID: ${pokemon.id}`);
-    this.set_text(card_clone, ".card-h_weight", h_weight);
-    this.set_text(card_clone, ".card-stats", stats);
-    this.set_text(card_clone, ".card-ability", `ABILITIES: ${abilities_array}`);
+    untils.set_text(card_clone, ".card-title", pokemon.name.toUpperCase());
+    untils.set_text(card_clone, ".card-type", `TYPE: ${types_string.toUpperCase()}`);
+    untils.set_text(card_clone, ".card-id", `ID: ${pokemon.id}`);
+    untils.set_text(card_clone, ".card-h_weight", heightWeight);
+    untils.set_text(card_clone, ".card-stats", stats);
+    untils.set_text(card_clone, ".card-ability", `ABILITIES: ${abilities}`);
     
     return card_clone;
   }
 
-  // Render multiple cards on the page
-  display_cards(batch_to_display) {
-
-    const card_container = document.getElementById("card-container");
-    card_container.innerHTML = "";
-    const template = document.getElementById("card-template");
-
-    if (!template || !card_container) {
-      return;
-    }
-
-    const temp_box = document.createDocumentFragment();
-
-    batch_to_display.forEach((pokemon) => {
-      const finished_card = this.create_single_card(pokemon, template);
-      temp_box.appendChild(finished_card);
-    });
-
-    card_container.appendChild(temp_box);
-  }
-
-  // Initialize
-  init() {
-    this.current_batch = this.draw_pokemon();
-    this.next_batch = this.draw_pokemon();
-
-    this.preload_next_pokemon(this.next_batch);
-    this.display_cards(this.current_batch);
-  }
-
-  // Pre-loading
-  load_next_batch() {
-    this.current_batch = this.next_batch;
-    this.display_cards(this.current_batch);
-
-    this.next_batch = this.draw_pokemon();
-    this.preload_next_pokemon(this.next_batch);
-  }
 }
 
-const poke_dex_1 = new pokenmon(pokemon_data);
+const untils = {
 
-document.addEventListener("DOMContentLoaded", () => poke_dex_1.init());
+  // Format abilities 
+  formatted_abilities(abilities_string) {
+    
+    if (!abilities_string) {
+      return "None";
+    }
+
+  return abilities_string
+      .split(",")
+      .map((ability) => {
+        const trimmed = ability.trim();
+        return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+      })
+      .join(", ");
+  },
+
+  // Helper function to set text content
+  set_text(card_clone, selector, value) {
+    const element = card_clone.querySelector(selector);
+    if (element) {
+      element.textContent = value;
+    }
+  }
+
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  const pokemon_card = new pokenmon_card("card-container", "card-template");
+  const pokedex = new display(pokemon_data_1_to_9, pokemon_card);
+
+  pokedex.init();
+
+  const next_button = document.getElementById("next-batch");
+  next_button.addEventListener("click", () => {
+    console.log("0. Next button clicked");
+    pokedex.load_next_batch();
+  });
+});
