@@ -4,7 +4,10 @@ class display {
   constructor(data, card_manager) {
     this.database = data;
     this.pokemon_manager = card_manager;
-
+    
+    this.shuffled_pokemon = untils.shuffled_array(this.database);
+    this.current_index = 0;
+    
     this.current_batch = [];
     this.next_batch = [];
 
@@ -13,11 +16,23 @@ class display {
 
   // Shuffle random pokemon from the database
   draw_pokemon() {
-    const shuffled_pokemon = [...this.database].sort(
-      () => Math.random() - 0.5,
-    );
-    const selected = shuffled_pokemon.slice(0, this.display_count);
-    console.log("1. Drew pokemon:", selected);
+    
+    // If We've drawn all cards, reshuffle and start over
+    if (this.current_index + this.display_count > this.shuffled_pokemon.length) {
+      console.log("All pokemon drawn, reshuffling...");
+      this.shuffled_pokemon = untils.shuffled_array(this.database)
+      this.current_index = 0;
+    }
+
+    // Select the next batch of pokemon
+    const selected = this.shuffled_pokemon.slice(
+      this.current_index, 
+      this.current_index + 
+      this.display_count);
+
+    this.current_index += this.display_count;
+
+    console.log("Drew pokemon:", selected);
     return selected;
   }
 
@@ -25,7 +40,7 @@ class display {
   preload_images(batch) {
     batch.forEach((pokemon) => {
       const img = new Image();
-      img.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`;
+      img.src = untils.getSpriteUrl(pokemon.id);
     });
   }
 
@@ -36,18 +51,17 @@ class display {
 
     this.preload_images(this.next_batch);
     this.pokemon_manager.display_cards(this.current_batch);
-    console.log("3. Pokedex initialized with", this.current_batch.length, "pokemon");
+    console.log("----- Pokedex initialized -----");
   }
 
   // Pre-loading
   load_next_batch() {
-    console.log("1. Loading next batch...");
     this.current_batch = this.next_batch;
     this.pokemon_manager.display_cards(this.current_batch);
 
     this.next_batch = this.draw_pokemon();
     this.preload_images(this.next_batch);
-    console.log("3. Next batch loaded");
+    console.log("----- Loaded next batch of pokemon -----");
   }
 }
 
@@ -69,12 +83,7 @@ class pokenmon_card {
       temp_box.appendChild(card_clone);
     });
     this.container.appendChild(temp_box);
-    console.log("2. Cards displayed");
-  }
-
-  // Build artwork URL from pokemon id
-  getSpriteUrl(pokemon_id) {
-    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon_id}.png`;
+    console.log("Cards displayed");
   }
 
   // Create a single card element
@@ -83,7 +92,7 @@ class pokenmon_card {
     
     // Set image source
     const imgElement = card_clone.querySelector(".card-img");
-    imgElement.src = this.getSpriteUrl(pokemon.id);
+    imgElement.src = untils.getSpriteUrl(pokemon.id);
     imgElement.alt = pokemon.name;
 
     // Format types，some pokemon have two types, some only have one
@@ -122,7 +131,6 @@ class pokenmon_card {
 }
 
 const untils = {
-
   // Format abilities 
   formatted_abilities(abilities_string) {
     
@@ -137,6 +145,16 @@ const untils = {
         return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
       })
       .join(", ");
+  },
+
+  // Shuffle an array
+  shuffled_array (array){
+    return [...array].sort(() => Math.random() - 0.5)
+  },
+
+  // Build artwork URL from pokemon id
+  getSpriteUrl(pokemon_id) {
+    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon_id}.png`;
   },
 
   // Helper function to set text content
@@ -157,7 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const next_button = document.getElementById("next-batch");
   next_button.addEventListener("click", () => {
-    console.log("0. Next button clicked");
+    console.log("Next button clicked");
     pokedex.load_next_batch();
   });
 });
