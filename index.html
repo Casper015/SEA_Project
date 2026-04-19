@@ -5,13 +5,17 @@
     <meta name="description" content="A Catalog of All Pokemon" />
     <link rel="stylesheet" href="style.css" />
     
-    <script src="./data/pokemon_stats.json"></script>
+    <script src="./data/pokemon_stats_1_9.js"></script>
     <script type="text/javascript" src="scripts.js"></script>
   </head>
 
   <body>
     <header class="main-header">
-      <h1 class="title">Pokemon Pokedex</h1>
+      <h1 class="title">Pokedex</h1>
+      <div class="display-controls">
+        <label for="display-count-input">Cards per page: </label>
+        <input type="number" id="display-count-input" value="3" min="1" max="8" style="width: 50px;">
+      </div>
     </header>
 
     <div id="card-container"></div>

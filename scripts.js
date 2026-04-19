@@ -34,12 +34,15 @@ class display {
     // previous and next button
     const before_button = document.getElementById("before-batch");
     const next_button = document.getElementById("next-batch");
+    // display count input
+    const display_count_input = document.getElementById("display-count-input");
     
     this.random_button = random_button;
     this.sort_dropdown = sort_dropdown;
     this.switch_button = switch_button;
     this.before_button_el = before_button;
     this.next_button_el = next_button;
+    this.display_count_input = display_count_input;
 
     // click to switch back to random mode
     if (random_button) {
@@ -96,6 +99,43 @@ class display {
         this.load_next_batch();
       });
     }
+
+    // change display count
+    if (display_count_input) {
+      const update_display_count = (event) => {
+        this.set_display_count(event.target.value);
+      };
+      display_count_input.addEventListener("change", update_display_count);
+      display_count_input.addEventListener("input", update_display_count);
+    }
+
+  }
+
+  // update cards per page
+  set_display_count(raw_value, refresh = true) {
+    const new_count = Number.parseInt(raw_value, 10);
+    if (Number.isNaN(new_count) || new_count < 1 || new_count > 8) {
+      console.log("Invalid display count, must be between 1 and 8");
+      if (this.display_count_input) {
+        this.display_count_input.value = String(this.display_count);
+      }
+      return false;
+    }
+
+    this.display_count = new_count;
+    this.pokemon_data.display_count = new_count;
+    this.pokemon_data.current_index = 0;
+
+    if (this.display_count_input) {
+      this.display_count_input.value = String(new_count);
+    }
+
+    if (refresh) {
+      this.refresh_batches();
+      console.log(`Display count updated: ${new_count}`);
+    }
+
+    return true;
   }
 
   // switch to random mode
@@ -169,11 +209,16 @@ class display {
       option.textContent = untils.stat_labels[stat];
       sort_dropdown.appendChild(option);
     });
+
+    const total_option = document.createElement("option");
+    total_option.value = "total";
+    total_option.textContent = untils.stat_labels.total;
+    sort_dropdown.appendChild(total_option);
   }
 
   // load previous batch
   before_button (){
-    if (this.pokemon_data.current_index <= this.display_count * 3) {
+    if (this.pokemon_data.current_index < this.display_count * 3) {
       console.log("Already at the beginning of the list");
       return;
     }
@@ -351,7 +396,8 @@ const untils = {
     defense: "DEF",
     sp_attack: "Sp. ATK",
     sp_defense: "Sp. DEF",
-    speed: "SPD"
+    speed: "SPD",
+    total: "TOTAL"
   },
 
   // Format base stats and total score
@@ -366,10 +412,7 @@ const untils = {
     });
 
     const stats_string = formatted_array.join("<br>");
-    const total_score = pokemon_stats.reduce((sum, key) => {
-      const value = pokemon[key];
-      return sum + value;
-    }, 0);
+    const total_score = this.total_score(pokemon);
 
     const max_total = pokemon_max_stats[6];
     return `${stats_string}<br><strong>Tot: ${total_score}/${max_total}</strong>`;
@@ -388,6 +431,15 @@ const untils = {
         return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
       })
       .join(", ");
+  },
+
+  // Calculate total score
+  total_score(pokemon) {
+    const { pokemon_stats } = untils;
+    return pokemon_stats.reduce((sum, key) => {
+      const value = pokemon[key];
+      return sum + value;
+    }, 0);
   },
 
   // Shuffle an array
@@ -440,13 +492,26 @@ const untils = {
     return untils.merge_arrays(left, right, key);
   },
 
+  // if it total, make another sum
+  get_sort_value(pokemon, key) {
+    if (key === "total") {
+      return untils.total_score(pokemon);
+    }
+
+    const value = pokemon[key];
+    return Number.isFinite(value) ? value : 0;
+  },
+
   merge_arrays(left, right, key) {
     const merged = [];
     let i = 0, j = 0;
 
     while (i < left.length && j < right.length) {
       // insert the smallest element into the merged array
-      if (left[i][key] < right[j][key]) {
+      const left_value = untils.get_sort_value(left[i], key);
+      const right_value = untils.get_sort_value(right[j], key);
+
+      if (left_value < right_value) {
         merged.push(left[i]);
         i++;
       } else {
