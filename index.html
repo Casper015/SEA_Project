@@ -5,13 +5,17 @@
     <meta name="description" content="A Catalog of All Pokemon" />
     <link rel="stylesheet" href="style.css" />
     
-    <script src="pokemon_stats.js"></script>
+    <script src="./data/pokemon_stats_1_9.js"></script>
     <script type="text/javascript" src="scripts.js"></script>
   </head>
 
   <body>
     <header class="main-header">
-      <h1 class="title">Pokemon Pokedex</h1>
+      <h1 class="title">Pokedex</h1>
+      <div class="display-controls">
+        <label for="display-count-input">Cards per page: </label>
+        <input type="number" id="display-count-input" value="3" min="1" max="8" style="width: 50px;">
+      </div>
     </header>
 
     <div id="card-container"></div>
@@ -31,11 +35,13 @@
     </template>
 
     <div class="footer">
+      <button id="random-batch">Random Card!</button>
       <button id ="sort-order-btn" class = "sort-menu">Ascending</button>
         <select id="sort-dropdown" class="sort-menu">
-          <option value="">Sort by Stats... (sort)</option>
+          <option value="">random</option>
         </select>
-      <button id="next-batch">Random Card!</button>
+      <button id="before-batch">Previous Card!</button>
+      <button id="next-batch">Next Card!</button>
     </div>
   </body>
 </html>
