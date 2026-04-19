@@ -16,15 +16,8 @@ class display {
 
   // Initialize
   init() {
-    const { pokemon_data, pokemon_manager } = this;
-
     this.setup_controls();
-
-    this.current_batch = pokemon_data.draw_pokemon();
-    this.next_batch = pokemon_data.draw_pokemon();
-
-    untils.preload_images(this.next_batch);
-    pokemon_manager.display_cards(this.current_batch);
+    this.refresh_batches();
     console.log("----- Pokedex initialized -----");
   }
 
@@ -65,15 +58,11 @@ class display {
   }
 
   sort_by_stat(stat_name) {
-    const { pokemon_data, pokemon_manager } = this;
+    const { pokemon_data } = this;
 
     this.active_sort_key = stat_name;
     pokemon_data.apply_sort_by_stat(stat_name);
-
-    this.current_batch = pokemon_data.draw_pokemon();
-    this.next_batch = pokemon_data.draw_pokemon();
-    pokemon_manager.display_cards(this.current_batch);
-    untils.preload_images(this.next_batch);
+    this.refresh_batches();
 
     if (!stat_name) {
       console.log("Sort cleared, switched back to random mode");
@@ -88,10 +77,10 @@ class display {
     const { sort_dropdown } = this;
     sort_dropdown.innerHTML = "";
 
-    const placeholder = document.createElement("option");
-    placeholder.value = "";
-    placeholder.textContent = "Sort by Stats... (sort)";
-    sort_dropdown.appendChild(placeholder);
+    const place_holder = document.createElement("option");
+    place_holder.value = "";
+    place_holder.textContent = "Sort by Stats... (sort)";
+    sort_dropdown.appendChild(place_holder);
 
     untils.pokemon_stats.forEach((stat) => {
       const option = document.createElement("option");
@@ -101,10 +90,25 @@ class display {
     });
   }
 
+  populate_sort_riseup(){
+    const { sort_dropdown } = this;
+    sort_riseup.innerHTML = "";
+
+  }
+
   
   next_button (){}
   sort_dropdown (){}
-  
+
+  refresh_batches() {
+    const { pokemon_data, pokemon_manager } = this;
+
+    this.current_batch = pokemon_data.draw_pokemon();
+    this.next_batch = pokemon_data.draw_pokemon();
+
+    pokemon_manager.display_cards(this.current_batch);
+    untils.preload_images(this.next_batch);
+  }
 }
 
 class pokenmon_card {
