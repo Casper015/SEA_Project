@@ -15,32 +15,41 @@ class display {
     this.pokemon_data = new pokemon_data(this.database, this.display_count);
   }
 
-  // Initialize
+  // initialize app
   init() {
     this.setup_controls();
     this.refresh_batches();
+    this.update_random_button_text();
     console.log("----- Pokedex initialized -----");
   }
 
+  // setup all controls
   setup_controls() {
-    // Random Pokemon Button
-    const next_button = document.getElementById("next-batch");
+    // random button
+    const random_button = document.getElementById("random-batch");
     // sort dropdown
     const sort_dropdown = document.getElementById("sort-dropdown");
-    // switch button
+    // sort order button
     const switch_button = document.getElementById("sort-order-btn");
-
-    this.next_button = next_button;
+    // previous and next button
+    const before_button = document.getElementById("before-batch");
+    const next_button = document.getElementById("next-batch");
+    
+    this.random_button = random_button;
     this.sort_dropdown = sort_dropdown;
     this.switch_button = switch_button;
+    this.before_button_el = before_button;
+    this.next_button_el = next_button;
 
-    if (next_button) {
-      next_button.addEventListener("click", () => {
-        console.log("Next button clicked");
-        this.load_random_next_batch();
+    // click to switch back to random mode
+    if (random_button) {
+      random_button.addEventListener("click", () => {
+        console.log("Random button clicked");
+        this.switch_to_random_mode();
       });
     }
 
+    // change sort key
     if (sort_dropdown) {
       this.populate_sort_dropdown();
       sort_dropdown.addEventListener("change", (event) => {
@@ -48,6 +57,7 @@ class display {
       });
     }
 
+    // toggle ascending / descending
     if (switch_button) {
       switch_button.textContent = this.ascending ? "Ascending" : "Descending";
       switch_button.addEventListener("click", () => {
@@ -70,11 +80,27 @@ class display {
         this.sort_by_stat(selected_key);
       });
     }
+
+    // go to previous batch
+    if (before_button) {
+      before_button.addEventListener("click", () => {
+        console.log("Before button clicked");
+        this.before_button();
+      });
+    }
+
+    // go to next batch
+    if (next_button) {
+      next_button.addEventListener("click", () => {
+        console.log("Next button clicked");
+        this.load_next_batch();
+      });
+    }
   }
 
-  // Load next random batch of pokemon
-  load_random_next_batch() {
-    const { pokemon_data, pokemon_manager } = this;
+  // switch to random mode
+  switch_to_random_mode() {
+    const { pokemon_data } = this;
 
     if (this.active_sort_key) {
       this.active_sort_key = "";
@@ -88,19 +114,19 @@ class display {
       }
 
       pokemon_data.apply_sort_by_stat("", this.ascending);
-      this.refresh_batches();
-      console.log("Switched to random mode");
-      return;
     }
 
-    this.current_batch = this.next_batch;
-    pokemon_manager.display_cards(this.current_batch);
+    // Keep Random button dedicated to random behavior by reshuffling from start.
+    pokemon_data.random_pokemon = untils.shuffled_array(this.database);
+    pokemon_data.ordered_pokemon = pokemon_data.random_pokemon;
+    pokemon_data.current_index = 0;
 
-    this.next_batch = pokemon_data.draw_pokemon();
-    untils.preload_images(this.next_batch);
-    console.log("----- Loaded next batch of pokemon -----");
+    this.refresh_batches();
+    this.update_random_button_text();
+    console.log("Switched to random mode");
   }
 
+  // sort cards by selected stat
   sort_by_stat(stat_name) {
     const { pokemon_data } = this;
 
@@ -108,6 +134,7 @@ class display {
 
     pokemon_data.apply_sort_by_stat(stat_name, this.ascending);
     this.refresh_batches();
+    this.update_random_button_text();
 
     if (!stat_name) {
       console.log("Sort cleared, switched back to random mode");
@@ -117,14 +144,23 @@ class display {
     console.log(`Applied sort by ${stat_name} in ${this.ascending ? "ascending" : "descending"} order`);
   }
 
+  // update random button label
+  update_random_button_text() {
+    if (!this.random_button) {
+      return;
+    }
 
+    this.random_button.textContent = this.active_sort_key ? "Not Random" : "Random Card!";
+  }
+
+  // fill dropdown options
   populate_sort_dropdown() {
     const { sort_dropdown } = this;
     sort_dropdown.innerHTML = "";
 
     const place_holder = document.createElement("option");
     place_holder.value = "";
-    place_holder.textContent = "Sort by Stats... (sort)";
+    place_holder.textContent = "Random";
     sort_dropdown.appendChild(place_holder);
 
     untils.pokemon_stats.forEach((stat) => {
@@ -135,16 +171,30 @@ class display {
     });
   }
 
-  populate_sort_riseup(){
-    const { sort_dropdown } = this;
-    sort_riseup.innerHTML = "";
-
+  // load previous batch
+  before_button (){
+    if (this.pokemon_data.current_index <= this.display_count * 3) {
+      console.log("Already at the beginning of the list");
+      return;
+    }
+    this.pokemon_data.current_index -= this.display_count * 3;
+    this.refresh_batches();
+    console.log(" ----- Loaded previous batch of pokemon -----");
   }
 
-  
-  next_button (){}
-  before_button (){}
+  // load next batch
+  load_next_batch() {
+    const { pokemon_data, pokemon_manager } = this;
 
+    this.current_batch = this.next_batch;
+    pokemon_manager.display_cards(this.current_batch);
+
+    this.next_batch = pokemon_data.draw_pokemon();
+    untils.preload_images(this.next_batch);
+    console.log("----- Loaded next batch of pokemon -----");
+  }
+
+  // draw current and preload next
   refresh_batches() {
     const { pokemon_data, pokemon_manager } = this;
 
@@ -270,7 +320,7 @@ class pokemon_data{
 
     const target_order = ascending ? "asc" : "desc";
     if (this.sorted_cache_order[stat_name] !== target_order) {
-      // Reverse in place to avoid re-sorting and extra array allocation.
+      // Reverse in place for asc or desc
       this.sorted_cache[stat_name].reverse();
       this.sorted_cache_order[stat_name] = target_order;
     }
