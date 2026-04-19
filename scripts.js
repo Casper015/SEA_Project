@@ -16,32 +16,37 @@ class display {
 
   // Initialize
   init() {
+    const { pokemon_data, pokemon_manager } = this;
+
     this.setup_controls();
 
-    this.current_batch = this.draw_pokemon();
-    this.next_batch = this.draw_pokemon();
+    this.current_batch = pokemon_data.draw_pokemon();
+    this.next_batch = pokemon_data.draw_pokemon();
 
     untils.preload_images(this.next_batch);
-    this.pokemon_manager.display_cards(this.current_batch);
+    pokemon_manager.display_cards(this.current_batch);
     console.log("----- Pokedex initialized -----");
   }
 
   setup_controls() {
     // Random Pokemon Button
-    this.next_button = document.getElementById("next-batch");
+    const next_button = document.getElementById("next-batch");
     // sort dropdown
-    this.sort_dropdown = document.getElementById("sort-dropdown");
+    const sort_dropdown = document.getElementById("sort-dropdown");
 
-    if (this.next_button) {
-      this.next_button.addEventListener("click", () => {
+    this.next_button = next_button;
+    this.sort_dropdown = sort_dropdown;
+
+    if (next_button) {
+      next_button.addEventListener("click", () => {
         console.log("Next button clicked");
         this.load_random_next_batch();
       });
     }
 
-    if (this.sort_dropdown) {
+    if (sort_dropdown) {
       this.populate_sort_dropdown();
-      this.sort_dropdown.addEventListener("change", (event) => {
+      sort_dropdown.addEventListener("change", (event) => {
         this.sort_by_stat(event.target.value);
       });
     }
@@ -49,25 +54,25 @@ class display {
 
   // Load next random batch of pokemon
   load_random_next_batch() {
-    this.current_batch = this.next_batch;
-    this.pokemon_manager.display_cards(this.current_batch);
+    const { pokemon_data, pokemon_manager } = this;
 
-    this.next_batch = this.draw_pokemon();
+    this.current_batch = this.next_batch;
+    pokemon_manager.display_cards(this.current_batch);
+
+    this.next_batch = pokemon_data.draw_pokemon();
     untils.preload_images(this.next_batch);
     console.log("----- Loaded next batch of pokemon -----");
   }
 
-  draw_pokemon() {
-    return this.pokemon_data.draw_pokemon();
-  }
-
   sort_by_stat(stat_name) {
-    this.active_sort_key = stat_name;
-    this.pokemon_data.apply_sort_by_stat(stat_name);
+    const { pokemon_data, pokemon_manager } = this;
 
-    this.current_batch = this.draw_pokemon();
-    this.next_batch = this.draw_pokemon();
-    this.pokemon_manager.display_cards(this.current_batch);
+    this.active_sort_key = stat_name;
+    pokemon_data.apply_sort_by_stat(stat_name);
+
+    this.current_batch = pokemon_data.draw_pokemon();
+    this.next_batch = pokemon_data.draw_pokemon();
+    pokemon_manager.display_cards(this.current_batch);
     untils.preload_images(this.next_batch);
 
     if (!stat_name) {
@@ -80,18 +85,19 @@ class display {
 
 
   populate_sort_dropdown() {
-    this.sort_dropdown.innerHTML = "";
+    const { sort_dropdown } = this;
+    sort_dropdown.innerHTML = "";
 
     const placeholder = document.createElement("option");
     placeholder.value = "";
     placeholder.textContent = "Sort by Stats... (sort)";
-    this.sort_dropdown.appendChild(placeholder);
+    sort_dropdown.appendChild(placeholder);
 
     untils.pokemon_stats.forEach((stat) => {
       const option = document.createElement("option");
       option.value = stat;
       option.textContent = untils.stat_labels[stat];
-      this.sort_dropdown.appendChild(option);
+      sort_dropdown.appendChild(option);
     });
   }
 
@@ -109,16 +115,17 @@ class pokenmon_card {
   }
 
   display_cards(batch) {
-    if (!this.template || !this.container) return;
+    const { template, container } = this;
+    if (!template || !container) return;
 
-    this.container.innerHTML = "";
+    container.innerHTML = "";
     const temp_box = document.createDocumentFragment();
 
     batch.forEach((pokemon) => {
-      const card_clone = this.create_single_card(pokemon, this.template);
+      const card_clone = this.create_single_card(pokemon, template);
       temp_box.appendChild(card_clone);
     });
-    this.container.appendChild(temp_box);
+    container.appendChild(temp_box);
     console.log("Cards displayed");
   }
 
@@ -173,7 +180,7 @@ class pokemon_data{
   // Shuffle random pokemon from the database
   draw_pokemon() {
     
-    // If We've drawn all cards, reshuffle and start over
+    //drawn all cards reshuffle and start over
     if (this.current_index + this.display_count > this.ordered_pokemon.length) {
       if (this.active_sort_key) {
         console.log("Reached end of sorted list, restarting from top...");
@@ -243,20 +250,22 @@ const untils = {
 
   // Format base stats and total score
   format_stats(pokemon) {
-    const formatted_array = this.pokemon_stats.map((stat, index) => {
-      const label = this.stat_labels[stat];
+    const { pokemon_stats, stat_labels, pokemon_max_stats } = untils;
+
+    const formatted_array = pokemon_stats.map((stat, index) => {
+      const label = stat_labels[stat];
       const value = pokemon[stat];
-      const max_value = this.pokemon_max_stats[index];
+      const max_value = pokemon_max_stats[index];
       return `${label}: ${value}/${max_value}` ;
     });
 
     const stats_string = formatted_array.join("<br>");
-    const total_score = this.pokemon_stats.reduce((sum, key) => {
+    const total_score = pokemon_stats.reduce((sum, key) => {
       const value = pokemon[key];
       return sum + value;
     }, 0);
 
-    const max_total = this.pokemon_max_stats[6];
+    const max_total = pokemon_max_stats[6];
     return `${stats_string}<br><strong>Tot: ${total_score}/${max_total}</strong>`;
   },
 
@@ -319,10 +328,10 @@ const untils = {
     const mid = Math.floor(arr.length / 2);
 
     // left and right halves
-    const left = this.sort_array(arr.slice(0, mid), key);
-    const right = this.sort_array(arr.slice(mid), key);
+    const left = untils.sort_array(arr.slice(0, mid), key);
+    const right = untils.sort_array(arr.slice(mid), key);
 
-    return this.merge_arrays(left, right, key);
+    return untils.merge_arrays(left, right, key);
   },
 
   merge_arrays(left, right, key) {
