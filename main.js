@@ -367,7 +367,8 @@ class pokemon_data{
     return selected;
   }
 
-  apply_sort_by_stat(stat_name, ascending = false) {
+  // Sort pokemon by a specific stat and resuse cached for asc or desc
+  apply_sort_by_stat(stat_name, ascending = true) {
     this.active_sort_key = stat_name;
     
     if (!stat_name) {
@@ -563,11 +564,27 @@ const utils = {
 
 document.addEventListener("DOMContentLoaded", async () => {
 
-  const response = await fetch("./data/pokemon_stats_1_9.json");
-  const pokemon_data_1_to_9 = await response.json();
+  try {
+    if (window.location.protocol === "file:") {
+      throw new Error("This app must be run from a local HTTP server (not file://).");
+    }
 
-  const pokemon_card = new pokenmon_card("card-container", "card-template");
-  const pokedex = new display(pokemon_data_1_to_9, pokemon_card);
+    const response = await fetch("./data/pokemon_stats_1_9.json");
+    if (!response.ok) {
+      throw new Error(`Failed to load dataset: ${response.status} ${response.statusText}`);
+    }
+    const pokemon_data_1_to_9 = await response.json();
 
-  pokedex.init();
+    const pokemon_card = new pokenmon_card("card-container", "card-template");
+    const pokedex = new display(pokemon_data_1_to_9, pokemon_card);
+
+    pokedex.init();
+  } catch (error) {
+    console.error(error);
+    const card_container = document.getElementById("card-container");
+    if (card_container) {
+      card_container.innerHTML = `<p class="error-message">Unable to load Pokemon data. ${error.message}</p>`;
+    }
+  }
 });
+

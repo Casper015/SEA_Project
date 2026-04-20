@@ -65,6 +65,17 @@ html, body {
   scrollbar-color: var(--pkm-accent) var(--pkm-gray);
 }
 
+.error-message {
+  width: 100%;
+  text-align: center;
+  font-family: 'VT323', monospace;
+  font-size: 1.25rem;
+  color: #ff8080;
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid #ff8080;
+  padding: 1rem;
+}
+
 #card-container::-webkit-scrollbar {
   height: 8px;
 }
