@@ -19,12 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-THIRD-PARTY DATA NOTICE
-The Pokémon dataset used in this project is sourced from:
-"Pokemon Complete Stats Gen 1 to Gen 9" by Ibrahim Qasimi
-Link: https://www.kaggle.com/datasets/ibrahimqasimi/pokemon-complete-stats-gen-1-to-gen-9
-
-This data is licensed under the Apache License, Version 2.0.
-A copy of this License may be obtained at: http://www.apache.org/licenses/LICENSE-2.0
