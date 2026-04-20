@@ -1,14 +1,4 @@
-/**
-* Pokemon Complete Stats Gen 1 to Gen 9
-* 
-* All 1,025 Pokemon with base stats, types, abilities, height, and weight
-* https://www.kaggle.com/datasets/ibrahimqasimi/pokemon-complete-stats-gen-1-to-gen-9
-* 
-*/
-
-
-
-const pokemon_data_1_to_9 = [
+[
   {
     "id": 1,
     "name": "bulbasaur",

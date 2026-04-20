@@ -1,4 +1,6 @@
 
+const RANDOM_SORT_KEY = "random";
+
 class display {
 
   constructor(data, card_manager) {
@@ -9,7 +11,7 @@ class display {
     this.next_batch = [];
 
     this.display_count = 3;
-    this.active_sort_key = "";
+    this.active_sort_key = RANDOM_SORT_KEY;
     this.ascending = true;
 
     this.pokemon_data = new pokemon_data(this.database, this.display_count);
@@ -50,7 +52,7 @@ class display {
         console.log("Random button clicked");
         
         // if not in the random mod, change to random mod
-        if (this.active_sort_key) {
+        if (this.active_sort_key !== RANDOM_SORT_KEY) {
           this.switch_to_random_mode();
           return;
         }
@@ -80,7 +82,7 @@ class display {
           selected_key = this.active_sort_key;
         }
 
-        if (!selected_key) {
+        if (!selected_key || selected_key === RANDOM_SORT_KEY) {
           console.log("No sort key selected, order toggle ignored");
           return;
         }
@@ -154,19 +156,18 @@ class display {
 
   // switch to random mode
   switch_to_random_mode() {
-    const { pokemon_data } = this;
 
-    this.active_sort_key = "";
+    this.active_sort_key = RANDOM_SORT_KEY;
     this.ascending = true;
 
     if (this.sort_dropdown) {
-      this.sort_dropdown.value = "";
+      this.sort_dropdown.value = RANDOM_SORT_KEY;
     }
     if (this.switch_button) {
       this.switch_button.textContent = "Ascending";
     }
 
-    pokemon_data.switch_to_random_mode();
+    this.pokemon_data.switch_to_random_mode();
 
     this.refresh_batches();
     this.update_random_button_text();
@@ -175,9 +176,8 @@ class display {
 
   // sort cards by selected stat
   sort_by_stat(stat_name) {
-    const { pokemon_data } = this;
 
-    if (!stat_name) {
+    if (!stat_name || stat_name === RANDOM_SORT_KEY) {
       this.switch_to_random_mode();
       console.log("Sort cleared, switched back to random mode");
       return;
@@ -185,7 +185,7 @@ class display {
 
     this.active_sort_key = stat_name;
 
-    pokemon_data.apply_sort_by_stat(stat_name, this.ascending);
+    this.pokemon_data.apply_sort_by_stat(stat_name, this.ascending);
     this.refresh_batches();
     this.update_random_button_text();
 
@@ -198,7 +198,7 @@ class display {
       return;
     }
 
-    this.random_button.textContent = this.active_sort_key ? "Not Random" : "Random Card!";
+    this.random_button.textContent = this.active_sort_key === RANDOM_SORT_KEY ? "Random Card!" : "Not Random";
   }
 
   // fill dropdown options
@@ -207,7 +207,7 @@ class display {
     sort_dropdown.innerHTML = "";
 
     const place_holder = document.createElement("option");
-    place_holder.value = "";
+    place_holder.value = RANDOM_SORT_KEY;
     place_holder.textContent = "Random";
     sort_dropdown.appendChild(place_holder);
 
@@ -325,14 +325,14 @@ class pokemon_data{
     this.random_pokemon = utils.shuffled_array(this.database);
     this.ordered_pokemon = this.random_pokemon;
     
-    this.active_sort_key = "";
+    this.active_sort_key = RANDOM_SORT_KEY;
     this.sorted_cache = {};
     this.sorted_cache_order = {};
   } 
 
   // Reset random mode state in one place.
   switch_to_random_mode() {
-    this.active_sort_key = "";
+    this.active_sort_key = RANDOM_SORT_KEY;
     this.random_pokemon = utils.shuffled_array(this.database);
     this.ordered_pokemon = this.random_pokemon;
     this.current_index = 0;
@@ -343,7 +343,7 @@ class pokemon_data{
     
     //drawn all cards reshuffle and start over
     if (this.current_index + this.display_count > this.ordered_pokemon.length) {
-      if (this.active_sort_key) {
+      if (this.active_sort_key !== RANDOM_SORT_KEY) {
         console.log("Reached end of sorted list, restarting from top...");
       } else {
         console.log("All pokemon drawn, reshuffling...");
@@ -366,12 +366,12 @@ class pokemon_data{
   }
 
   apply_sort_by_stat(stat_name, ascending = false) {
-    this.active_sort_key = stat_name;
-    
-    if (!stat_name) {
+    if (!stat_name || stat_name === RANDOM_SORT_KEY) {
       this.switch_to_random_mode();
       return;
     }
+
+    this.active_sort_key = stat_name;
 
     if (!this.sorted_cache[stat_name]) {
       this.sorted_cache[stat_name] = utils.sort_array(this.database, stat_name);
@@ -557,7 +557,11 @@ const utils = {
   
 };
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+
+  const response = await fetch("./data/pokemon_stats_1_9.json");
+  const pokemon_data_1_to_9 = await response.json();
+
   const pokemon_card = new pokenmon_card("card-container", "card-template");
   const pokedex = new display(pokemon_data_1_to_9, pokemon_card);
 
