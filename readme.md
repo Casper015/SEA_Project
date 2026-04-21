@@ -20,10 +20,12 @@ This project uses the **Pokemon Complete Stats (Gen 1 - Gen 9)** dataset.
 - **Author:** [Ibrahim Qasimi](https://www.kaggle.com/ibrahimqasimi)
 - **Source:** [Kaggle Dataset](https://www.kaggle.com/datasets/ibrahimqasimi/pokemon-complete-stats-gen-1-to-gen-9)
 - **License:** Apache License 2.0
+
 Image Source
 - **PokeAPI:** Official artwork sourced via GitHub [PokeAPI/sprites](https://github.com/PokeAPI/sprites).
 
 ## Reference: 
 Implementation inspired by this [Stack Overflow discussion](https://stackoverflow.com/questions/69239521/unable-to-display-pokemon-image-from-pokeapi-co) regarding PokeAPI image rendering.
+Generated from [stage-2-SEA-Project](https://github.com/Snap-Engineering-Academy-2026/stage-2-SEA-Project)
 
 
