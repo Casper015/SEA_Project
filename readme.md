@@ -26,6 +26,7 @@ Image Source
 
 ## Reference: 
 Implementation inspired by this [Stack Overflow discussion](https://stackoverflow.com/questions/69239521/unable-to-display-pokemon-image-from-pokeapi-co) regarding PokeAPI image rendering.
+
 Generated from [stage-2-SEA-Project](https://github.com/Snap-Engineering-Academy-2026/stage-2-SEA-Project)
 
 
