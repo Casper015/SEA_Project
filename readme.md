@@ -7,14 +7,6 @@ A interactive Pokemon catalog featuring stats from Generation 1 through 9.
 * **Live Sorting** — Sort Pokemon by any base stat (HP, ATK, DEF, etc.) or Total score, in both ascending and descending order.
 * **Preloading** — Efficiently preloads images for a smooth browsing experience.
 
-## File Structure
-PokeDex/
-├── index.html       # Page structure + card template
-├── style.css        # Retro theme and card layouts
-├── main.js          # Core logic: Display, Card Manager, and Data handling
-└── data/
-    └── pokemon_stats_1_9.json  # Comprehensive dataset of 1000+ Pokemon
-
 ## 📜 Credits & Data Source
 This project uses the **Pokemon Complete Stats (Gen 1 - Gen 9)** dataset.
 - **Author:** [Ibrahim Qasimi](https://www.kaggle.com/ibrahimqasimi)
